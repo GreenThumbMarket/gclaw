@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { buildWaitingStatusMessage, pickWaitingPhrase } from "./tui-waiting.js";
+import {
+  buildWaitingStatusMessage,
+  ollamaLoadingPhrases,
+  pickWaitingPhrase,
+} from "./tui-waiting.js";
 
 const theme = {
   dim: (s: string) => `<d>${s}</d>`,
@@ -16,6 +20,32 @@ describe("tui-waiting", () => {
     expect(pickWaitingPhrase(10, phrases)).toBe("b");
     expect(pickWaitingPhrase(20, phrases)).toBe("c");
     expect(pickWaitingPhrase(30, phrases)).toBe("a");
+  });
+
+  it("uses loading phrases when ollamaStatus.stage is loading", () => {
+    const msg = buildWaitingStatusMessage({
+      theme,
+      tick: 0,
+      elapsed: "5s",
+      connectionStatus: "connected",
+      ollamaStatus: { stage: "loading" },
+    });
+    // Should use one of the ollama loading phrases
+    const usedPhrase = ollamaLoadingPhrases[0];
+    for (const ch of usedPhrase) {
+      expect(msg).toContain(ch);
+    }
+  });
+
+  it("shows tok/s when ollamaStatus.stage is generating", () => {
+    const msg = buildWaitingStatusMessage({
+      theme,
+      tick: 0,
+      elapsed: "5s",
+      connectionStatus: "connected",
+      ollamaStatus: { stage: "generating", tokPerSec: 42.5 },
+    });
+    expect(msg).toContain("42.5 tok/s");
   });
 
   it("buildWaitingStatusMessage includes shimmer markup and metadata", () => {

@@ -4,17 +4,23 @@ type MinimalTheme = {
   accentSoft: (s: string) => string;
 };
 
+export const ollamaLoadingPhrases = [
+  "loading model into memory",
+  "warming up the model",
+  "preparing weights",
+];
+
 export const defaultWaitingPhrases = [
-  "flibbertigibbeting",
-  "kerfuffling",
-  "dillydallying",
-  "twiddling thumbs",
-  "noodling",
-  "bamboozling",
-  "moseying",
-  "hobnobbing",
-  "pondering",
-  "conjuring",
+  "photosynthesizing",
+  "germinating",
+  "composting",
+  "cross-pollinating",
+  "putting down roots",
+  "unfurling leaves",
+  "reaching for light",
+  "branching out",
+  "budding",
+  "propagating",
 ];
 
 export function pickWaitingPhrase(tick: number, phrases = defaultWaitingPhrases) {
@@ -38,14 +44,31 @@ export function shimmerText(theme: MinimalTheme, text: string, tick: number) {
   return out;
 }
 
+export type OllamaStatus = {
+  stage?: "loading" | "generating" | "idle";
+  tokPerSec?: number;
+};
+
 export function buildWaitingStatusMessage(params: {
   theme: MinimalTheme;
   tick: number;
   elapsed: string;
   connectionStatus: string;
   phrases?: string[];
+  ollamaStatus?: OllamaStatus;
 }) {
-  const phrase = pickWaitingPhrase(params.tick, params.phrases);
+  const { ollamaStatus } = params;
+  let phrase: string;
+  if (ollamaStatus?.stage === "loading") {
+    phrase = pickWaitingPhrase(params.tick, ollamaLoadingPhrases);
+  } else {
+    phrase = pickWaitingPhrase(params.tick, params.phrases);
+  }
+
   const cute = shimmerText(params.theme, `${phrase}…`, params.tick);
-  return `${cute} • ${params.elapsed} | ${params.connectionStatus}`;
+  let extra = "";
+  if (ollamaStatus?.stage === "generating" && ollamaStatus.tokPerSec) {
+    extra = ` • ${ollamaStatus.tokPerSec.toFixed(1)} tok/s`;
+  }
+  return `${cute} • ${params.elapsed}${extra} | ${params.connectionStatus}`;
 }

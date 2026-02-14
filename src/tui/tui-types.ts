@@ -37,6 +37,9 @@ export type SessionInfo = {
   responseUsage?: "on" | "off" | "tokens" | "full";
   updatedAt?: number | null;
   displayName?: string;
+  tokPerSec?: number | null;
+  connectivityStatus?: string;
+  ollamaHealthy?: boolean;
 };
 
 export type SessionScope = "per-sender" | "global";
@@ -46,7 +49,16 @@ export type AgentSummary = {
   name?: string;
 };
 
+export type OllamaStatusField = {
+  healthy: boolean;
+  version?: string;
+  error?: string;
+  models: Array<{ name: string; size: number }>;
+  running: Array<{ name: string; sizeVram: number }>;
+};
+
 export type GatewayStatusSummary = {
+  ollama?: OllamaStatusField;
   linkChannel?: {
     id?: string;
     label?: string;

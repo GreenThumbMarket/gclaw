@@ -14,6 +14,7 @@ import type {
   TuiStateAccess,
 } from "./tui-types.js";
 import { resolveDefaultAgentId } from "../agents/agent-scope.js";
+import { getOllamaStatus } from "../agents/ollama-health.js";
 import { loadConfig } from "../config/config.js";
 import {
   buildAgentMainSessionKey,
@@ -28,11 +29,13 @@ import { GatewayChatClient } from "./gateway-chat.js";
 import { editorTheme, theme } from "./theme/theme.js";
 import { createCommandHandlers } from "./tui-command-handlers.js";
 import { createEventHandlers } from "./tui-event-handlers.js";
+import { formatFooter } from "./tui-footer.js";
 import { formatTokens } from "./tui-formatters.js";
 import { createLocalShellRunner } from "./tui-local-shell.js";
 import { createOverlayHandlers } from "./tui-overlays.js";
 import { createSessionActions } from "./tui-session-actions.js";
 import { buildWaitingStatusMessage, defaultWaitingPhrases } from "./tui-waiting.js";
+import { buildWelcomeMessage } from "./tui-welcome.js";
 
 export { resolveFinalAssistantText } from "./tui-formatters.js";
 export type { TuiOptions } from "./tui-types.js";
@@ -324,7 +327,7 @@ export async function runTui(opts: TuiOptions) {
     const agentLabel = formatAgentLabel(currentAgentId);
     header.setText(
       theme.header(
-        `openclaw tui - ${client.connection.url} - agent ${agentLabel} - session ${sessionLabel}`,
+        `🌿 gclaw - ${client.connection.url} - agent ${agentLabel} - session ${sessionLabel}`,
       ),
     );
   };
@@ -519,7 +522,17 @@ export async function runTui(opts: TuiOptions) {
       reasoningLabel,
       tokens,
     ].filter(Boolean);
-    footer.setText(theme.dim(footerParts.join(" | ")));
+    // Smart footer with Ollama metrics
+    const smartFooter = formatFooter({
+      model: modelLabel,
+      tokPerSec: sessionInfo.tokPerSec ?? undefined,
+      totalTokens: sessionInfo.totalTokens ?? undefined,
+      contextTokens: sessionInfo.contextTokens ?? undefined,
+      connectivityStatus: sessionInfo.connectivityStatus ?? (isConnected ? "online" : "local-only"),
+      ollamaHealthy: sessionInfo.ollamaHealthy !== false,
+    });
+    const legacyFooter = theme.dim(footerParts.join(" | "));
+    footer.setText(`${smartFooter}\n${legacyFooter}`);
   };
 
   const { openOverlay, closeOverlay } = createOverlayHandlers(tui, editor);
@@ -668,6 +681,29 @@ export async function runTui(opts: TuiOptions) {
       await refreshAgents();
       updateHeader();
       await loadHistory();
+
+      // Show welcome message on first connect (not reconnect)
+      if (!reconnected) {
+        try {
+          const ollamaInfo = await getOllamaStatus();
+          const modelLabel = sessionInfo.model
+            ? sessionInfo.modelProvider
+              ? `${sessionInfo.modelProvider}/${sessionInfo.model}`
+              : sessionInfo.model
+            : "unknown";
+          chatLog.addSystem(
+            buildWelcomeMessage({
+              model: modelLabel,
+              ollamaHealthy: ollamaInfo.health.healthy,
+              ollamaVersion: ollamaInfo.health.healthy ? ollamaInfo.health.version : undefined,
+              modelsCount: ollamaInfo.models.length,
+            }),
+          );
+        } catch {
+          // Silently skip welcome if Ollama check fails entirely
+        }
+      }
+
       setConnectionStatus(reconnected ? "gateway reconnected" : "gateway connected", 4000);
       tui.requestRender();
       if (!autoMessageSent && autoMessage) {

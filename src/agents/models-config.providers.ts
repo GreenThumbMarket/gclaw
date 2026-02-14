@@ -17,7 +17,7 @@ import {
   buildHuggingfaceModelDefinition,
 } from "./huggingface-models.js";
 import { resolveAwsSdkEnvVarName, resolveEnvApiKey } from "./model-auth.js";
-import { OLLAMA_NATIVE_BASE_URL } from "./ollama-stream.js";
+import { OLLAMA_BASE_URL as OLLAMA_NATIVE_BASE_URL } from "./ollama-shared.js";
 import {
   buildSyntheticModelDefinition,
   SYNTHETIC_BASE_URL,
@@ -697,15 +697,18 @@ export async function resolveImplicitProviders(params: {
     break;
   }
 
-  // Ollama provider - only add if explicitly configured.
-  // Use the user's configured baseUrl (from explicit providers) for model
-  // discovery so that remote / non-default Ollama instances are reachable.
-  const ollamaKey =
-    resolveEnvApiKeyVarName("ollama") ??
-    resolveApiKeyFromProfiles({ provider: "ollama", store: authStore });
-  if (ollamaKey) {
+  // Ollama provider - auto-enabled for local-first usage.
+  // No API key required for local Ollama instances. If an API key is configured
+  // (e.g. for authenticated remote Ollama), it will be included.
+  {
+    const ollamaKey =
+      resolveEnvApiKeyVarName("ollama") ??
+      resolveApiKeyFromProfiles({ provider: "ollama", store: authStore });
     const ollamaBaseUrl = params.explicitProviders?.ollama?.baseUrl;
-    providers.ollama = { ...(await buildOllamaProvider(ollamaBaseUrl)), apiKey: ollamaKey };
+    providers.ollama = {
+      ...(await buildOllamaProvider(ollamaBaseUrl)),
+      ...(ollamaKey ? { apiKey: ollamaKey } : {}),
+    };
   }
 
   // vLLM provider - OpenAI-compatible local server (opt-in via env/profile).

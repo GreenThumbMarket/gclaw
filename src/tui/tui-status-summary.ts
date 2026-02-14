@@ -5,7 +5,7 @@ import { formatContextUsageLine } from "./tui-formatters.js";
 
 export function formatStatusSummary(summary: GatewayStatusSummary) {
   const lines: string[] = [];
-  lines.push("Gateway status");
+  lines.push("🌿 gclaw status");
 
   if (!summary.linkChannel) {
     lines.push("Link channel: unknown");
@@ -75,6 +75,33 @@ export function formatStatusSummary(summary: GatewayStatusSummary) {
       lines.push(
         `- ${entry.key}${entry.kind ? ` [${entry.kind}]` : ""} | ${ageLabel} | model ${model} | ${usage}${flags}`,
       );
+    }
+  }
+
+  // ── Ollama status ──────────────────────────────────────────────────────
+  if (summary.ollama) {
+    const o = summary.ollama;
+    lines.push("");
+    if (o.healthy) {
+      lines.push(`Ollama: connected (v${o.version})`);
+    } else {
+      lines.push(`Ollama: not reachable${o.error ? ` — ${o.error}` : ""}`);
+    }
+    if (o.models.length > 0) {
+      const names = o.models.map((m) => {
+        const gb = (m.size / 1e9).toFixed(1);
+        return `${m.name} (${gb}GB)`;
+      });
+      lines.push(`  Models: ${names.join(", ")}`);
+    } else if (o.healthy) {
+      lines.push("  Models: none pulled");
+    }
+    if (o.running.length > 0) {
+      const names = o.running.map((m) => {
+        const gb = (m.sizeVram / 1e9).toFixed(1);
+        return `${m.name} (${gb}GB VRAM)`;
+      });
+      lines.push(`  Loaded: ${names.join(", ")}`);
     }
   }
 

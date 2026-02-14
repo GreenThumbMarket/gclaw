@@ -1,111 +1,54 @@
-# Contributing to OpenClaw
+# 🌱 Contributing to gclaw
 
-Welcome to the lobster tank! 🦞
+Hey! Thanks for wanting to contribute. This is a hacker's project — we keep things simple. 🌿
 
-## Quick Links
+## Setup
 
-- **GitHub:** https://github.com/openclaw/openclaw
-- **Discord:** https://discord.gg/qkhbAGHRBT
-- **X/Twitter:** [@steipete](https://x.com/steipete) / [@openclaw](https://x.com/openclaw)
-
-## Maintainers
-
-- **Peter Steinberger** - Benevolent Dictator
-  - GitHub: [@steipete](https://github.com/steipete) · X: [@steipete](https://x.com/steipete)
-
-- **Shadow** - Discord + Slack subsystem
-  - GitHub: [@thewilloftheshadow](https://github.com/thewilloftheshadow) · X: [@4shad0wed](https://x.com/4shad0wed)
-
-- **Vignesh** - Memory (QMD), formal modeling, TUI, and Lobster
-  - GitHub: [@vignesh07](https://github.com/vignesh07) · X: [@\_vgnsh](https://x.com/_vgnsh)
-
-- **Jos** - Telegram, API, Nix mode
-  - GitHub: [@joshp123](https://github.com/joshp123) · X: [@jjpcodes](https://x.com/jjpcodes)
-
-- **Christoph Nakazawa** - JS Infra
-  - GitHub: [@cpojer](https://github.com/cpojer) · X: [@cnakazawa](https://x.com/cnakazawa)
-
-- **Gustavo Madeira Santana** - Multi-agents, CLI, web UI
-  - GitHub: [@gumadeiras](https://github.com/gumadeiras) · X: [@gumadeiras](https://x.com/gumadeiras)
-
-- **Maximilian Nussbaumer** - DevOps, CI, Code Sanity
-  - GitHub: [@quotentiroler](https://github.com/quotentiroler) · X: [@quotentiroler](https://x.com/quotentiroler)
-
-## How to Contribute
-
-1. **Bugs & small fixes** → Open a PR!
-2. **New features / architecture** → Start a [GitHub Discussion](https://github.com/openclaw/openclaw/discussions) or ask in Discord first
-3. **Questions** → Discord #setup-help
-
-## Before You PR
-
-- Test locally with your OpenClaw instance
-- Run tests: `pnpm build && pnpm check && pnpm test`
-- Ensure CI checks pass
-- Keep PRs focused (one thing per PR)
-- Describe what & why
-
-## Control UI Decorators
-
-The Control UI uses Lit with **legacy** decorators (current Rollup parsing does not support
-`accessor` fields required for standard decorators). When adding reactive fields, keep the
-legacy style:
-
-```ts
-@state() foo = "bar";
-@property({ type: Number }) count = 0;
+```bash
+git clone https://github.com/GreenThumbMarket/gclaw.git
+cd gclaw
+pnpm install
+pnpm build
 ```
 
-The root `tsconfig.json` is configured for legacy decorators (`experimentalDecorators: true`)
-with `useDefineForClassFields: false`. Avoid flipping these unless you are also updating the UI
-build tooling to support standard decorators.
+Requirements: **Node.js ≥ 22**, **pnpm** (see `packageManager` in package.json for exact version).
 
-## AI/Vibe-Coded PRs Welcome! 🤖
+## Running Tests
 
-Built with Codex, Claude, or other AI tools? **Awesome - just mark it!**
+```bash
+pnpm test          # parallel test runner
+pnpm test:fast     # unit tests only (vitest)
+pnpm test:watch    # watch mode
+```
 
-Please include in your PR:
+## Code Style
 
-- [ ] Mark as AI-assisted in the PR title or description
-- [ ] Note the degree of testing (untested / lightly tested / fully tested)
-- [ ] Include prompts or session logs if possible (super helpful!)
-- [ ] Confirm you understand what the code does
+- **Language**: TypeScript (strict)
+- **Linter**: [oxlint](https://oxc.rs/) — `pnpm lint`
+- **Formatter**: [oxfmt](https://oxc.rs/) — `pnpm format`
+- **Check everything**: `pnpm check` (format + typecheck + lint)
 
-AI PRs are first-class citizens here. We just want transparency so reviewers know what to look for.
+Don't fight the formatter. Just run `pnpm format` before committing.
 
-## Current Focus & Roadmap 🗺
+## Making Changes
 
-We are currently prioritizing:
+1. Fork the repo and create a branch (`git checkout -b my-thing`)
+2. Make your changes
+3. Run `pnpm check` and `pnpm test`
+4. Commit with a clear message (we loosely follow [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `chore:`, etc.)
+5. Open a PR against `main`
 
-- **Stability**: Fixing edge cases in channel connections (WhatsApp/Telegram).
-- **UX**: Improving the onboarding wizard and error messages.
-- **Skills**: For skill contributions, head to [ClawHub](https://clawhub.ai/) — the community hub for OpenClaw skills.
-- **Performance**: Optimizing token usage and compaction logic.
+## PR Guidelines
 
-Check the [GitHub Issues](https://github.com/openclaw/openclaw/issues) for "good first issue" labels!
+- Keep PRs focused — one thing per PR
+- Add tests if you're adding functionality
+- Update docs if behavior changes
+- Don't stress about perfection — we'll iterate together
 
-## Report a Vulnerability
+## Architecture
 
-We take security reports seriously. Report vulnerabilities directly to the repository where the issue lives:
+This is a fork of [OpenClaw](https://github.com/openclaw-ai/openclaw). See [FORK.md](./FORK.md) for what we changed and why. We try to keep the diff minimal so upstream merges stay clean.
 
-- **Core CLI and gateway** — [openclaw/openclaw](https://github.com/openclaw/openclaw)
-- **macOS desktop app** — [openclaw/openclaw](https://github.com/openclaw/openclaw) (apps/macos)
-- **iOS app** — [openclaw/openclaw](https://github.com/openclaw/openclaw) (apps/ios)
-- **Android app** — [openclaw/openclaw](https://github.com/openclaw/openclaw) (apps/android)
-- **ClawHub** — [openclaw/clawhub](https://github.com/openclaw/clawhub)
-- **Trust and threat model** — [openclaw/trust](https://github.com/openclaw/trust)
+## 💚 Questions?
 
-For issues that don't fit a specific repo, or if you're unsure, email **security@openclaw.ai** and we'll route it.
-
-### Required in Reports
-
-1. **Title**
-2. **Severity Assessment**
-3. **Impact**
-4. **Affected Component**
-5. **Technical Reproduction**
-6. **Demonstrated Impact**
-7. **Environment**
-8. **Remediation Advice**
-
-Reports without reproduction steps, demonstrated impact, and remediation advice will be deprioritized. Given the volume of AI-generated scanner findings, we must ensure we're receiving vetted reports from researchers who understand the issues.
+Open an issue. There are no stupid questions. We're growing this garden together. 🌻
